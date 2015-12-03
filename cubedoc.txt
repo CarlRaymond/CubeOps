@@ -1,0 +1,103 @@
+From raymond@cps.msu.edu Wed Jan 15 08:05 PST 1992
+Received: from spim.mips.com by flux.mips.com (5.61/Relay-2.9) 
+	id AA12494; Wed, 15 Jan 92 08:05:06 -0800
+Received: from galaxy.cps.msu.edu by spim.mips.com via SMTP (5.61.15/2.9)
+	id AA00511; Wed, 15 Jan 92 08:05:00 -0800
+Received: from cpss11.cps.msu.edu by galaxy.cps.msu.edu (4.1/rpj-5.0); id AA06884; Wed, 15 Jan 92 11:01:43 EST
+Received: by cpss11.cps.msu.edu (4.1/4.1)
+	id AA01789; Wed, 15 Jan 92 11:01:42 EST
+Date: Wed, 15 Jan 92 11:01:42 EST
+From: raymond@cps.msu.edu
+Message-Id: <9201151601.AA01789@cpss11.cps.msu.edu>
+To: DEVO@gdlvm7.vnet.ibm.com, berson@cs.pitt.edu, bosch@mips.com,
+        keng@zcar.asd.sgi.com, palmerp@math.orst.edu, schmidtg@astro.pc.ab.com,
+        tjj@rolf.helsinki.fi, tout@cps.msu
+Subject: Cube software doc
+Status: OR
+
+I sent the cube software in a separate message.  It is a tar file that
+has been compressed and uuencoded.
+
+  I had some trouble with the lex program on my machine -- it gave
+a nonsense warning on the file "scanner", and then gcc wouldn't compile
+the lex.yy.c that lex created.  So I used flex on my PC, and then ran
+that through gcc with no trouble.
+
+The files are:
+  Makefile         Self-explanatory.
+  cube.c           Driver.  Has all the permutation manipulating code.
+  parser           YACC or BISON parser (both work)
+  scanner          LEX or FLEX scanner (my LEX choked.  Don't know why)
+  *.h              Function prototypes, struct definitions, etc.
+  test.sym         File of two named operators
+
+
+Start the program by typing "cube".  The program is interactive.  Below is
+an example of what you can do.  What you type is shown indented two
+spaces.  Comments on the input and output (not to be typed) are in /* */ pairs:
+
+  R;  /* Turn right face a quarter turn clockwise */
+(ur br dr fr) (urf urb drb drf)  [4] /* 4 is the order of the permutation */
+
+  UR;   /* U turn followed by R turn */
+(uf ul ub br dr fr ur) (urf ulf ulb drb drf)- (urb)+  [105]
+/* The + and - indicate CW and CCW corner twists, respectively */
+
+  UR(UR)';  /* UR, followed by inverse of UR */
+Identity
+
+  load "test.sym";  /* Load a file of named operators */
+joe = (ur br dr fr) (urf urb drb drf)  [4]
+bob = (uf ul ub ur br dr fr) (urf)+ (ulf ulb urb drb drf)-  [105]
+/* There were two operators int the file, joe and bob.  */
+
+  joe bob;  /* Do a joe, followed by a bob */
+(uf ul ub ur dr) (fr br) (urf drb ulf ulb urb drf)  [30]
+
+  FRBL;
+(uf ur ub ul fl) (fr df dl bl db br dr) (urf)+ (ulf)+ (ulb)+ (urb)+
+(drf dlb drb)+ (dlf)+  [315]
+
+  (FRBL)315;  /* Repeat an FRBL 315 times -- will be back at start */
+Identity
+
+  sam=FRBL;  /* Give a name to FRBL */
+sam = (uf ur ub ul fl) (fr df dl bl db br dr) (urf)+ (ulf)+ (ulb)+ (urb)+
+      (drf dlb drb)+ (dlf)+  [315]
+
+  list;  /* Show all named operators */
+sam = (uf ur ub ul fl) (fr df dl bl db br dr) (urf)+ (ulf)+ (ulb)+ (urb)+
+      (drf dlb drb)+ (dlf)+  [315]
+joe = (ur br dr fr) (urf urb drb drf)  [4]
+bob = (uf ul ub ur br dr fr) (urf)+ (ulf ulb urb drb drf)-  [105]
+
+  save "test2.sym";  /* Save sam, joe, and bob in test2.sym */
+
+OK
+
+
+Note that I am not saving the move sequences -- the permutation is
+computed during the parsing, and the input discarded.
+
+Permutations are stored as a 20 by 2 array.  The first row gives the
+new location of each cubicle, and the second line indicates the flip
+or twist, relative to the principal face of the cubicle.  The principle
+face of a cubicle is either the U or D face, if applicable, or the L
+or R face.  (See Hofstadter's articles in _Metamagical Themas_ or
+Singmaster's _Notes on Rubik's Magic Cube_.)  The principal face of
+a cubie the principal face of its home cubicle.  If an operator flips
+an edge piece, there is a 1 in the appropriate entry of the second
+row of the array.  For corners, there can be a 0, 1, or 2, corresponding
+to no twist, CW twist, and CCW twist.  When operators are combined,
+the flips and twists are added, and reduced mod 2 or mod 3, as appropriate.
+
+I realize that this documentation is rather sketchy; if you have any
+questions, I'll try to answer them.
+
+Feel free to do anything you want with this stuff.
+
+Carl
+
+
+
+

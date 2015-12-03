@@ -1,0 +1,57 @@
+/* Scanner for CUBE */
+
+%{
+#include "operator.h"
+#include "cube.h"
+#include "symbol.h"
+#include "y.tab.h"
+
+char str[100];
+
+%}
+
+WS [ \t\n]+
+UINT [0-9]+
+SYMBOL [a-z][a-z0-9]*
+
+%%
+
+U         { return(U_TOK); }
+
+D         { return(D_TOK); }
+
+L         { return(L_TOK); }
+
+R         { return(R_TOK); }
+
+F         { return(F_TOK); }
+
+B         { return(B_TOK); }
+
+list      { return(LIST_TOK); }
+
+save      { return(SAVE_TOK); }
+
+load      { return(LOAD_TOK); }   
+
+quit      { return(QUIT_TOK); }   
+
+{UINT}    { yylval.ival = atoi(yytext);
+	    return(INT_TOK);
+	  }
+
+{SYMBOL}  { yylval.sym = find_symbol(yytext);
+            return(SYMBOL_TOK);
+          }
+
+\"[^\"\n]*\"  { strcpy(str, yytext+1);
+                str[yyleng-2]='\0';
+                yylval.str = str;
+                return(STRING_TOK);
+              }
+
+{WS}      { /* Ignore */ }
+         
+.         { return(yytext[0]); }
+
+%%

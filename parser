@@ -1,0 +1,108 @@
+%{
+/* Elucidates permutaions on Rubik's Cube */
+/* CJR */
+
+#include <stdio.h>
+#include "operator.h"
+#include "cube.h"
+#include "symbol.h"
+
+extern struct operator U, D, L, R, F, B;
+
+%}
+
+/* Token and non-terminal types */
+%union { struct operator op;
+         struct symbol *sym;
+         char *str;
+	 int ival;
+       }
+       
+%token U_TOK D_TOK L_TOK R_TOK F_TOK B_TOK LIST_TOK SAVE_TOK LOAD_TOK QUIT_TOK
+%token<ival> INT_TOK
+%token<sym> SYMBOL_TOK
+%token<str> STRING_TOK
+
+/* Non-terminal types */
+%type <op> face expr seq
+
+/* Goal symbol */
+%start file
+
+%%
+face : U_TOK	{ copy_op(&U, &$$); }
+     | D_TOK   	{ copy_op(&D, &$$); }
+     | L_TOK    { copy_op(&L, &$$); }
+     | R_TOK    { copy_op(&R, &$$); }
+     | F_TOK    { copy_op(&F, &$$); }
+     | B_TOK    { copy_op(&B, &$$); }
+     ;
+
+expr : face
+    { copy_op(&$1, &$$);
+    }
+         
+  | expr '\''
+    { invert(&$1, &$$);
+    }
+         
+  | expr INT_TOK
+    { power(&$1, $2, &$$);
+    }
+         
+  | '(' seq ')'
+    { copy_op(&$2, &$$);
+    }
+         
+  | SYMBOL_TOK
+    { copy_op(&($1->op), &$$);
+    }
+  ;
+
+seq : expr
+    { copy_op(&$1, &$$);
+    }
+  | seq expr
+    { compose(&$1, &$2, &$$);
+    }
+  ;
+
+statement : seq ';'
+    { print_cycles(&$1);
+    }
+  | SYMBOL_TOK '=' seq ';'
+    { copy_op(&$3, &($1->op));
+      printf("%s = ", $1->name);
+      print_cycles(&($1->op));
+    }
+  | LIST_TOK ';'
+    { list_symbols();
+    }
+  | SAVE_TOK STRING_TOK ';'
+    { save_symbols($2);
+    }
+  | LOAD_TOK STRING_TOK ';'
+    { load_symbols($2);
+      list_symbols();
+    }    
+  | QUIT_TOK ';'
+    { return(0);
+    }
+  | error ';'
+    { yyerror();
+      yyerrok;
+    }
+  ;
+          
+statements : /* nothing */
+           | statements statement
+           ;
+
+file : statements
+     ;
+
+%%
+
+int yyerror()
+  { printf("Syntax error.\n");
+  }
